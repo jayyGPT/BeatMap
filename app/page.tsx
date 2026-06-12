@@ -102,7 +102,7 @@ export default function Home() {
       setError(err instanceof Error ? err.message : "Unknown error");
       setState("error");
     }
-  }, []);
+  }, [audioUrl]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

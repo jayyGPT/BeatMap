@@ -150,7 +150,7 @@ export default function Timeline({ trackLength, timeline, audioUrl }: TimelinePr
   }, [audioUrl]);
 
   /* rAF loop: sync playhead + flash hits */
-  const tick = useCallback(() => {
+  const tick = useCallback(function tickFn() {
     const audio = audioRef.current;
     if (!audio || audio.paused) return;
 
@@ -201,7 +201,7 @@ export default function Timeline({ trackLength, timeline, audioUrl }: TimelinePr
       }
     }
 
-    rafRef.current = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tickFn);
   }, [hitsWithIds, trackLength, zoom]);
 
   const handlePlay = useCallback(() => {
