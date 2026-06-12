@@ -92,7 +92,7 @@ export default function Timeline({ trackLength, timeline, audioUrl }: TimelinePr
   /* Generate smart time markers */
   const timeMarkers = useMemo(() => {
     const visibleDuration = trackLength / zoom;
-    const targetMarkerCount = Math.max(8, Math.floor(12 * zoom));
+    const targetMarkerCount = 12; // Keep number of visible markers constant to avoid text overlap
 
     const niceIntervals = [0.1, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60];
     const rawInterval = visibleDuration / targetMarkerCount;
@@ -485,14 +485,19 @@ export default function Timeline({ trackLength, timeline, audioUrl }: TimelinePr
 
                     {hits.map((hit, idx) => {
                       const pct = (hit.time / trackLength) * 100;
-                      const opacity = 0.4 + hit.confidence * 0.6;
+                      const opacity = 0.2 + hit.confidence * 0.8;
+                      const heightPct = Math.max(20, hit.confidence * 100);
                       const hitId = `${lane.key}-${timeline.indexOf(hit)}`;
                       const isActive = activeHits.has(hitId);
                       return (
                         <div
                           key={`${lane.key}-${idx}`}
                           className={`hit-block ${lane.key}${isActive ? " hit-active" : ""}`}
-                          style={{ left: `${pct}%`, opacity: isActive ? 1 : opacity }}
+                          style={{ 
+                            left: `${pct}%`, 
+                            opacity: isActive ? 1 : opacity,
+                            height: `${heightPct}%`
+                          }}
                         >
                           <div className="hit-tooltip">
                             {hit.instrument} · {formatTime(hit.time)} ·{" "}

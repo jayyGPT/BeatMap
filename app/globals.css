@@ -2,31 +2,64 @@
 
 /* ── Design tokens — retro-clean ─────────────────────────────────── */
 :root {
-  --bg-primary: #111111;
-  --bg-surface: #1a1a1a;
-  --bg-elevated: #222222;
-  --bg-inset: #0d0d0d;
+  /* Dark retro (Tube Amp / CRT) */
+  --bg-primary: #121010;
+  --bg-surface: #1c1818;
+  --bg-elevated: #282222;
+  --bg-inset: #0a0808;
 
-  --border-hard: #2a2a2a;
-  --border-focus: #444;
+  --border-hard: #3a2e2e;
+  --border-focus: #6e5454;
 
-  --text-primary: #e0e0e0;
-  --text-secondary: #888;
-  --text-muted: #555;
+  --text-primary: #ffdca8; /* Warm amber glow */
+  --text-secondary: #ccaa7a;
+  --text-muted: #886644;
 
-  /* Muted retro palette */
-  --kick-color: #c084fc;
-  --snare-color: #fb7185;
-  --hat-color: #67e8f9;
-  --tom-color: #fbbf24;
+  /* Glowing retro palette */
+  --kick-color: #d946ef; /* Bright fuchsia */
+  --snare-color: #f97316; /* Tube orange */
+  --hat-color: #06b6d4; /* Phosphor cyan */
+  --tom-color: #eab308; /* Bright yellow */
 
-  --accent: #c084fc;
-  --accent-dim: #a855f7;
+  --accent: #f97316; 
+  --accent-dim: #c2410c;
   --success: #4ade80;
   --error: #f87171;
 
+  --retro-shadow: 0 0 10px var(--accent);
+  --retro-border: 1px solid var(--border-hard);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+.theme-light {
+  /* Light retro (Cassette / Walkman) */
+  --bg-primary: #f4f1ea; /* Cream/beige */
+  --bg-surface: #e8e4d9;
+  --bg-elevated: #ddd8c8;
+  --bg-inset: #d2ceb6;
+
+  --border-hard: #b8b29e;
+  --border-focus: #8c8774;
+
+  --text-primary: #2d2d2d;
+  --text-secondary: #5a5a5a;
+  --text-muted: #858585;
+
+  /* Retro stripes palette */
+  --kick-color: #e11d48; /* Red */
+  --snare-color: #ea580c; /* Orange */
+  --hat-color: #0d9488; /* Teal */
+  --tom-color: #ca8a04; /* Mustard */
+
+  --accent: #ea580c; 
+  --accent-dim: #c2410c;
+  --success: #16a34a;
+  --error: #dc2626;
+
+  --retro-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  --retro-border: 2px solid var(--border-hard);
 }
 
 @theme inline {
@@ -47,6 +80,27 @@ body {
   font-family: var(--font-mono), ui-monospace, "Cascadia Code", "Fira Code", monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* CRT Scanlines for dark mode */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  z-index: 999;
+  opacity: 1;
+}
+
+.theme-light body::after {
+  opacity: 0; /* Disable scanlines in cassette mode */
 }
 
 ::selection {
@@ -77,8 +131,9 @@ body {
 /* ── Card — flat, bordered ───────────────────────────────────────── */
 .card {
   background: var(--bg-surface);
-  border: 1px solid var(--border-hard);
+  border: var(--retro-border);
   border-radius: 6px;
+  box-shadow: var(--retro-shadow);
 }
 
 /* ── Dropzone ────────────────────────────────────────────────────── */
@@ -101,9 +156,14 @@ body {
   position: relative;
   height: 40px;
   background: var(--bg-inset);
-  border: 1px solid var(--border-hard);
+  border: var(--retro-border);
   border-radius: 3px;
   overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.theme-light .lane {
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
 }
 
 .lane-grid {
@@ -122,22 +182,31 @@ body {
 /* ── Drum hit block ──────────────────────────────────────────────── */
 .hit-block {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
+  top: 50%; /* Center vertically to allow height scaling */
   width: 4px;
   border-radius: 1px;
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, filter 0.1s ease;
+  transform: translateY(-50%);
 }
 
 .hit-block:hover {
-  transform: scaleX(2.5) scaleY(1.15);
-  z-index: 10;
+  transform: translateY(-50%) scaleX(2.5) scaleY(1.15) !important;
+  z-index: 10 !important;
+  opacity: 1 !important;
+  filter: brightness(1.5);
 }
 
-.hit-block.kick  { background: var(--kick-color); }
-.hit-block.snare { background: var(--snare-color); }
-.hit-block.hat   { background: var(--hat-color); }
-.hit-block.tom   { background: var(--tom-color); }
+.hit-block.kick  { background: var(--kick-color); box-shadow: 0 0 8px var(--kick-color); }
+.hit-block.snare { background: var(--snare-color); box-shadow: 0 0 8px var(--snare-color); }
+.hit-block.hat   { background: var(--hat-color); box-shadow: 0 0 8px var(--hat-color); }
+.hit-block.tom   { background: var(--tom-color); box-shadow: 0 0 8px var(--tom-color); }
+
+.theme-light .hit-block.kick,
+.theme-light .hit-block.snare,
+.theme-light .hit-block.hat,
+.theme-light .hit-block.tom {
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.3); /* Flat retro shadow for cassette */
+}
 
 /* ── Hit tooltip ─────────────────────────────────────────────────── */
 .hit-tooltip {
@@ -399,5 +468,5 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .hit-block.hit-active {
   animation: hit-flash 0.3s ease-out;
-  z-index: 15;
+  z-index: 15 !important;
 }

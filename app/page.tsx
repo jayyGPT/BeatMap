@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import Timeline, { type TimelineHit } from "./components/Timeline";
 
 /* ─── Types ──────────────────────────────────────────────────────── */
@@ -10,36 +10,6 @@ interface AnalysisResult {
 }
 
 type AppState = "idle" | "uploading" | "analyzing" | "done" | "error";
-
-/* ─── Debounce / cleanup function ────────────────────────────────── */
-const DEBOUNCE_WINDOW = 0.3; // seconds
-
-function debounceTimeline(hits: TimelineHit[]): TimelineHit[] {
-  if (hits.length === 0) return [];
-
-  const sorted = [...hits].sort((a, b) => a.time - b.time);
-  const result: TimelineHit[] = [];
-  let current = sorted[0];
-
-  for (let i = 1; i < sorted.length; i++) {
-    const next = sorted[i];
-    const sameInstrument =
-      next.instrument.toLowerCase() === current.instrument.toLowerCase();
-    const withinWindow = next.time - current.time <= DEBOUNCE_WINDOW;
-
-    if (sameInstrument && withinWindow) {
-      if (next.confidence > current.confidence) {
-        current = next;
-      }
-    } else {
-      result.push(current);
-      current = next;
-    }
-  }
-  result.push(current);
-
-  return result;
-}
 
 /* ─── Main page ──────────────────────────────────────────────────── */
 export default function Home() {
@@ -52,7 +22,16 @@ export default function Home() {
   const [cleanedTimeline, setCleanedTimeline] = useState<TimelineHit[]>([]);
   const [rawCount, setRawCount] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (theme === "light") {
+      document.documentElement.classList.add("theme-light");
+    } else {
+      document.documentElement.classList.remove("theme-light");
+    }
+  }, [theme]);
 
   const formatSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -72,13 +51,26 @@ export default function Home() {
     setFileSize(formatSize(file.size));
     setError("");
     setResult(null);
-    // Create blob URL for audio playback
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    const blobUrl = URL.createObjectURL(file);
-    setAudioUrl(blobUrl);
     setState("analyzing");
 
     try {
+      const blobUrl = URL.createObjectURL(file);
+      
+      // Check audio duration
+      const duration = await new Promise<number>((resolve, reject) => {
+        const audio = new Audio(blobUrl);
+        audio.onloadedmetadata = () => resolve(audio.duration);
+        audio.onerror = () => reject(new Error("Failed to load audio metadata"));
+      });
+
+      if (duration >= 180) {
+        URL.revokeObjectURL(blobUrl);
+        throw new Error("Audio must be less than 3 minutes long.");
+      }
+
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      setAudioUrl(blobUrl);
+
       const formData = new FormData();
       formData.append("file", file);
 
@@ -94,8 +86,7 @@ export default function Home() {
       const data: AnalysisResult = await res.json();
       setRawCount(data.timeline.length);
 
-      const cleaned = debounceTimeline(data.timeline);
-      setCleanedTimeline(cleaned);
+      setCleanedTimeline(data.timeline);
       setResult(data);
       setState("done");
     } catch (err) {
@@ -145,25 +136,31 @@ export default function Home() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const deduped = rawCount - cleanedTimeline.length;
-
   return (
     <main className="flex-1 flex flex-col">
       <div className="max-w-5xl w-full mx-auto px-6 py-10 flex flex-col gap-8">
         {/* ── Header ──────────────────────────────────────────── */}
-        <header className="animate-in">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
-              BeatMap
-            </h1>
-            <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: "var(--text-muted)" }}>
-              audio timeline analyzer
-            </span>
+        <header className="animate-in flex items-center justify-between">
+          <div>
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)", textShadow: "var(--retro-shadow)" }}>
+                BeatMap
+              </h1>
+              <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: "var(--text-muted)" }}>
+                audio timeline analyzer
+              </span>
+            </div>
+            <div
+              className="mt-2 h-px w-full"
+              style={{ background: "var(--border-hard)" }}
+            />
           </div>
-          <div
-            className="mt-2 h-px w-full"
-            style={{ background: "var(--border-hard)" }}
-          />
+          <button
+            onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
+            className="btn font-bold uppercase tracking-widest text-[10px]"
+          >
+            {theme === "dark" ? "☀ Cassette Mode" : "☽ Tube Mode"}
+          </button>
         </header>
 
         {/* ── Upload ──────────────────────────────────────────── */}
@@ -241,11 +238,6 @@ export default function Home() {
                 <span className="text-xs font-mono" style={{ color: "var(--text-secondary)" }}>
                   ✓ {fileName}
                 </span>
-                {deduped > 0 && (
-                  <span className="text-[10px] font-mono" style={{ color: "var(--tom-color)" }}>
-                    ({deduped} duplicate{deduped !== 1 ? "s" : ""} cleaned)
-                  </span>
-                )}
               </div>
               <button onClick={handleReset} className="btn text-[10px]">
                 new file
