@@ -1,0 +1,403 @@
+@import "tailwindcss";
+
+/* ── Design tokens — retro-clean ─────────────────────────────────── */
+:root {
+  --bg-primary: #111111;
+  --bg-surface: #1a1a1a;
+  --bg-elevated: #222222;
+  --bg-inset: #0d0d0d;
+
+  --border-hard: #2a2a2a;
+  --border-focus: #444;
+
+  --text-primary: #e0e0e0;
+  --text-secondary: #888;
+  --text-muted: #555;
+
+  /* Muted retro palette */
+  --kick-color: #c084fc;
+  --snare-color: #fb7185;
+  --hat-color: #67e8f9;
+  --tom-color: #fbbf24;
+
+  --accent: #c084fc;
+  --accent-dim: #a855f7;
+  --success: #4ade80;
+  --error: #f87171;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ── Base ────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-mono), ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--accent);
+  color: #000;
+}
+
+/* ── Utility animations (minimal) ────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes slide-progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+/* ── Card — flat, bordered ───────────────────────────────────────── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hard);
+  border-radius: 6px;
+}
+
+/* ── Dropzone ────────────────────────────────────────────────────── */
+.dropzone {
+  border: 1px dashed var(--border-hard);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+
+.dropzone:hover,
+.dropzone.drag-over {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+/* ── Timeline lanes ──────────────────────────────────────────────── */
+.lane {
+  position: relative;
+  height: 40px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-hard);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.lane-grid {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--border-hard) 0px,
+    var(--border-hard) 1px,
+    transparent 1px,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* ── Drum hit block ──────────────────────────────────────────────── */
+.hit-block {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 1px;
+  transition: transform 0.1s ease;
+}
+
+.hit-block:hover {
+  transform: scaleX(2.5) scaleY(1.15);
+  z-index: 10;
+}
+
+.hit-block.kick  { background: var(--kick-color); }
+.hit-block.snare { background: var(--snare-color); }
+.hit-block.hat   { background: var(--hat-color); }
+.hit-block.tom   { background: var(--tom-color); }
+
+/* ── Hit tooltip ─────────────────────────────────────────────────── */
+.hit-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hard);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-size: 10px;
+  font-family: var(--font-mono), monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  z-index: 50;
+}
+
+.hit-block:hover .hit-tooltip {
+  opacity: 1;
+}
+
+/* ── Playhead ────────────────────────────────────────────────────── */
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.playhead::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+/* ── Zoom slider ─────────────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: var(--border-hard);
+  border-radius: 1px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: var(--text-primary);
+}
+
+/* ── Loading bar ─────────────────────────────────────────────────── */
+.loading-bar {
+  height: 2px;
+  background: var(--border-hard);
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+
+.loading-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: var(--accent);
+  animation: slide-progress 1.2s ease-in-out infinite;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+  font-family: var(--font-mono), monospace;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+  border: 1px solid var(--border-hard);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.btn:hover {
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.btn-accent:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #000;
+}
+
+/* ── Scrollbar — thin ────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hard);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+/* ── Tag / badge ─────────────────────────────────────────────────── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+}
+
+.tag-kick  { color: var(--kick-color);  border-color: color-mix(in srgb, var(--kick-color) 30%, transparent); }
+.tag-snare { color: var(--snare-color); border-color: color-mix(in srgb, var(--snare-color) 30%, transparent); }
+.tag-hat   { color: var(--hat-color);   border-color: color-mix(in srgb, var(--hat-color) 30%, transparent); }
+.tag-tom   { color: var(--tom-color);   border-color: color-mix(in srgb, var(--tom-color) 30%, transparent); }
+
+/* ── Playback transport ──────────────────────────────────────────── */
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-hard);
+  border-radius: 4px;
+}
+
+.transport-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  border: 1px solid var(--border-hard);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.1s ease, border-color 0.1s ease;
+  font-size: 12px;
+}
+
+.transport-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+.transport-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Progress scrubber ───────────────────────────────────────────── */
+.scrubber-track {
+  position: relative;
+  height: 4px;
+  background: var(--border-hard);
+  border-radius: 2px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.scrubber-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.scrubber-track:hover {
+  height: 6px;
+  margin-top: -1px;
+  margin-bottom: -1px;
+}
+
+/* ── Playback playhead (distinct from hover cursor) ──────────────── */
+.playhead-transport {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--success);
+  z-index: 25;
+  pointer-events: none;
+  transition: none;
+}
+
+.playhead-transport::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--success);
+}
+
+/* ── Hit block flash on playback ─────────────────────────────────── */
+@keyframes hit-flash {
+  0% { filter: brightness(1); transform: scaleX(1) scaleY(1); }
+  30% { filter: brightness(2.5); transform: scaleX(3) scaleY(1.3); }
+  100% { filter: brightness(1); transform: scaleX(1) scaleY(1); }
+}
+
+.hit-block.hit-active {
+  animation: hit-flash 0.3s ease-out;
+  z-index: 15;
+}
